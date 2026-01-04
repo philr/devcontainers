@@ -25,3 +25,15 @@ jobs:
         with:
           subFolder: multi-ruby
           imageName: ghcr.io/${{github.repository_owner}}/multi-ruby-devcontainer
+
+  clean:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old container images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: multi-ruby-devcontainer
+          package-type: container
+          delete-only-untagged-versions: 'true'
+          min-versions-to-keep: 1
