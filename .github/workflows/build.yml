@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      noCache:
+        description: 'Build images with --no-cache'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -25,6 +31,7 @@ jobs:
         with:
           subFolder: multi-ruby
           imageName: ghcr.io/${{github.repository_owner}}/multi-ruby-devcontainer
+          noCache: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.noCache }}
 
   clean:
     needs: build
