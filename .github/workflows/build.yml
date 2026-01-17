@@ -5,15 +5,9 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      noCache:
-        description: 'Build images with --no-cache'
-        required: true
-        type: boolean
-        default: false
 
 jobs:
-  build:
+  build_ruby_base:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,21 +20,132 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push multi-ruby devcontainer
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push ruby-base
+        uses: docker/build-push-action@v6
+        with:
+          context: ruby-base
+          cache-from: type=registry,ref=ghcr.io/${{github.repository_owner}}/ruby-base:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{github.repository_owner}}/ruby-base:buildcache,mode=max
+          build-args: |
+            USER=${{github.repository_owner}}
+          push: true
+          tags: ghcr.io/${{github.repository_owner}}/ruby-base:latest
+
+      - name: Build and push jruby-base
+        uses: docker/build-push-action@v6
+        with:
+          context: jruby-base
+          cache-from: type=registry,ref=ghcr.io/${{github.repository_owner}}/jruby-base:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{github.repository_owner}}/jruby-base:buildcache,mode=max
+          build-args: |
+            USER=${{github.repository_owner}}
+          push: true
+          tags: ghcr.io/${{github.repository_owner}}/jruby-base:latest
+
+      - name: Delete old container images
+        uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4 # v1.0.16
+        with:
+          packages: ruby-base,jruby-base
+          keep-n-untagged: 1
+
+  build_ruby_versions:
+    needs: build_ruby_base
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        args: [
+          { version: "4.0.1" },
+          { version: "3.3.9" },
+          #{ version: "3.2.10" },
+          #{ version: "3.1.7" },
+          #{ version: "3.0.7" },
+          #{ version: "2.7.8" },
+          #{ version: "2.6.9", bundler_version: "~> 1" },
+          #{ version: "2.5.9", bundler_version: "~> 1" },
+          #{ version: "2.4.9", bundler_version: "~> 1" },
+          #{ version: "2.3.8", bundler_version: "~> 1" },
+          #{ version: "2.2.8", bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration" },
+          #{ version: "2.1.9", bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration" },
+          #{ version: "2.0.0-p648", legacy: 1, bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration" },
+          #{ version: "1.9.3-p551", legacy: 1, bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration" },
+          #{ version: "1.8.7-p375", legacy: 1, bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration", patch: "1.8.7-enable-ssl-sni.patch" },
+          #{ version: "jruby-10.0.2.0", ruby_base: "jruby-base", java_home: "/usr/lib/jvm/temurin-21-jre-amd64" },
+          #{ version: "jruby-9.4.14.0", ruby_base: "jruby-base", java_home: "/usr/lib/jvm/temurin-8-jre-amd64" },
+          #{ version: "jruby-9.3.15.0", ruby_base: "jruby-base", java_home: "/usr/lib/jvm/temurin-8-jre-amd64" },
+          #{ version: "jruby-9.2.21.0", ruby_base: "jruby-base", java_home: "/usr/lib/jvm/temurin-8-jre-amd64" },
+          #{ version: "jruby-9.1.17.0", ruby_base: "jruby-base", java_home: "/usr/lib/jvm/temurin-8-jre-amd64", bundler_version: "~> 1" },
+          #{ version: "jruby-9.0.5.0", ruby_base: "jruby-base", java_home: "/usr/lib/jvm/temurin-8-jre-amd64", legacy: 1, bundler_version: "~> 1" },
+          #{ version: "truffleruby-25.0.0" }
+        ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push ruby-${{ matrix.args.version }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ruby
+          cache-from: type=registry,ref=ghcr.io/${{github.repository_owner}}/ruby-${{ matrix.args.version }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{github.repository_owner}}/ruby-${{ matrix.args.version }}:buildcache,mode=max
+          build-args: |
+            USER=${{github.repository_owner}}
+            RUBY_BASE=${{ matrix.args.ruby_base || 'ruby-base' }}
+            VERSION=${{ matrix.args.version }}
+            LEGACY=${{ matrix.args.legacy || '0' }}
+            BUNDLER_VERSION=${{ matrix.args.bundler_version || '' }}
+            GEM_NO_DOCUMENT=${{ matrix.args.gem_no_document || '--no-document' }}
+            WARN_FLAGS=${{ matrix.args.warn_flags }}
+            PATCH=${{ matrix.args.patch }}
+            JAVA_HOME=/usr/lib/jvm/temurin-${{ matrix.args.java_version || '21' }}-jre-amd64
+          push: true
+          tags: ghcr.io/${{github.repository_owner}}/ruby-${{ matrix.args.version }}:latest
+
+      - name: Delete old container images
+        uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4 # v1.0.16
+        with:
+          packages: ruby-${{ matrix.args.version }}
+          keep-n-untagged: 1
+
+  build_multi_ruby_devcontainer:
+    needs: build_ruby_versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push multi-ruby-devcontainer
         uses: devcontainers/ci@v0.3
         with:
           subFolder: multi-ruby
           imageName: ghcr.io/${{github.repository_owner}}/multi-ruby-devcontainer
-          noCache: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.noCache }}
+          cacheFrom: type=registry,ref=ghcr.io/${{github.repository_owner}}/multi-ruby-devcontainer:buildcache
+          cacheTo: type=registry,ref=ghcr.io/${{github.repository_owner}}/multi-ruby-devcontainer:buildcache,mode=max
 
-  clean:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
       - name: Delete old container images
-        uses: actions/delete-package-versions@v5
+        uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4 # v1.0.16
         with:
-          package-name: multi-ruby-devcontainer
-          package-type: container
-          delete-only-untagged-versions: 'true'
-          min-versions-to-keep: 1
+          packages: multi-ruby-devcontainer
+          keep-n-untagged: 1

@@ -1,7 +1,10 @@
 {
     "build": {
         "dockerfile": "./Dockerfile",
-        "context": "."
+        "context": ".",
+        "args": {
+            "USER": "${localEnv:GITHUB_REPOSITORY_OWNER}"
+        }
     },
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
