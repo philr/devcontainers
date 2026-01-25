@@ -1,6 +1,7 @@
 ARG USER=philr
+ARG UBUNTU_VERSION=24.04
 
-FROM ubuntu:24.04
+FROM ubuntu:${UBUNTU_VERSION}
 
 ARG USER
 
@@ -32,6 +33,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         lsb-release \
         make \
         patch \
+        rdfind \
+        xz-utils \
         zlib1g-dev \
     && apt-get autoremove --yes \
     && apt-get dist-clean

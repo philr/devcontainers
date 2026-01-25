@@ -17,8 +17,8 @@ RUN if [[ "$USE_LEGACY_RUBY_BUILD" -eq 1 ]]; then git -C $HOME/.rbenv/plugins/ru
     && git -C $HOME/.rbenv/plugins/ruby-build pull \
     && eval "$($HOME/.rbenv/bin/rbenv init - --no-rehash bash)" \
     && if [[ -n "$PATCH" ]]; \
-        then RUBY_CONFIGURE_OPTIONS=--disable-install-doc warnflags="$WARN_FLAGS" rbenv install --verbose --patch "$VERSION" < "$HOME/.rbenv-patches/$PATCH"; \
-        else RUBY_CONFIGURE_OPTIONS=--disable-install-doc warnflags="$WARN_FLAGS" rbenv install --verbose "$VERSION"; \
+        then RUBY_CONFIGURE_OPTS="--disable-install-doc --disable-install-rdoc" warnflags="$WARN_FLAGS" rbenv install --verbose --patch "$VERSION" < "$HOME/.rbenv-patches/$PATCH"; \
+        else RUBY_CONFIGURE_OPTS="--disable-install-doc --disable-install-rdoc" warnflags="$WARN_FLAGS" rbenv install --verbose "$VERSION"; \
     fi \
     && rbenv global "$VERSION" \
     && if [[ -n "$BUNDLER_VERSION" ]]; then gem install bundler -v "$BUNDLER_VERSION" "$GEM_NO_DOCUMENT"; fi

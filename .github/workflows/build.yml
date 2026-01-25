@@ -8,6 +8,7 @@ on:
 
 jobs:
   build_ruby_base:
+    name: Build ruby-base and jruby-base images
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,6 +32,7 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{github.repository_owner}}/ruby-base:buildcache,mode=max
           build-args: |
             USER=${{github.repository_owner}}
+            UBUNTU_VERSION=24.04
           push: true
           tags: ghcr.io/${{github.repository_owner}}/ruby-base:latest
 
@@ -53,6 +55,7 @@ jobs:
 
   build_ruby_versions:
     needs: build_ruby_base
+    name: Build Ruby ${{ matrix.args.version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -81,25 +84,33 @@ jobs:
           #{ version: "truffleruby-25.0.0" }
         ]
     steps:
+      - name: Initialize variables
+        id: variables
+        run: echo platform=ubuntu-24.04 >> $GITHUB_OUTPUT
+
+      - name: Check if already built
+        id: check_exists
+        run: |
+          if curl --fail --head --retry 5 --silent "https://github.com/$GITHUB_REPOSITORY/releases/download/ruby-builds/${{ matrix.args.version }}-${{ steps.variables.outputs.platform }}.tar.xz"
+          then
+            echo exists=1 >> $GITHUB_OUTPUT
+          else
+            echo exists=0 >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout
+        if: steps.check_exists.outputs.exists == 0
         uses: actions/checkout@v6
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Set up Docker Buildx
+        if: steps.check_exists.outputs.exists == 0
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push ruby-${{ matrix.args.version }}
+      - name: Build Ruby
+        if: steps.check_exists.outputs.exists == 0
         uses: docker/build-push-action@v6
         with:
           context: ruby
-          cache-from: type=registry,ref=ghcr.io/${{github.repository_owner}}/ruby-${{ matrix.args.version }}:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{github.repository_owner}}/ruby-${{ matrix.args.version }}:buildcache,mode=max
           build-args: |
             USER=${{github.repository_owner}}
             RUBY_BASE=${{ matrix.args.ruby_base || 'ruby-base' }}
@@ -110,17 +121,29 @@ jobs:
             WARN_FLAGS=${{ matrix.args.warn_flags }}
             PATCH=${{ matrix.args.patch }}
             JAVA_HOME=/usr/lib/jvm/temurin-${{ matrix.args.java_version || '21' }}-jre-amd64
-          push: true
-          tags: ghcr.io/${{github.repository_owner}}/ruby-${{ matrix.args.version }}:latest
+          load: true
+          tags: ruby-build-${{ matrix.args.version }}:latest
 
-      - name: Delete old container images
-        uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4 # v1.0.16
-        with:
-          packages: ruby-${{ matrix.args.version }}
-          keep-n-untagged: 1
+      - name: Copy ruby build files
+        if: steps.check_exists.outputs.exists == 0
+        run: docker cp "$(docker create "ruby-build-${{ matrix.args.version }}:latest"):/home/devcontainer/.rbenv/versions/${{ matrix.args.version }}" "$RUNNER_TEMP"
+
+      - name: Package ruby build files
+        if: steps.check_exists.outputs.exists == 0
+        run: |
+          cd "$RUNNER_TEMP"
+          tar cJf "${{ matrix.args.version }}-${{ steps.variables.outputs.platform }}.tar.xz" "${{ matrix.args.version }}"
+
+      - name: Publish ruby build
+        if: steps.check_exists.outputs.exists == 0
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload ruby-builds "$RUNNER_TEMP/${{ matrix.args.version }}-${{ steps.variables.outputs.platform }}.tar.xz"
 
   build_multi_ruby_devcontainer:
     needs: build_ruby_versions
+    name: Build multi-ruby-devcontainer image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -138,14 +161,24 @@ jobs:
 
       - name: Build and push multi-ruby-devcontainer
         uses: devcontainers/ci@v0.3
+        env:
+          RUBY_BASE: jruby-base
+          RBENV_VERSIONS: "4.0.1 3.3.9"
+          RBENV_GLOBAL_VERSION: "4.0.1"
+          RUBY_PLATFORM: "ubuntu-24.04"
         with:
           subFolder: multi-ruby
-          imageName: ghcr.io/${{github.repository_owner}}/multi-ruby-devcontainer
-          cacheFrom: type=registry,ref=ghcr.io/${{github.repository_owner}}/multi-ruby-devcontainer:buildcache
-          cacheTo: type=registry,ref=ghcr.io/${{github.repository_owner}}/multi-ruby-devcontainer:buildcache,mode=max
+          imageName: ghcr.io/${{ github.repository_owner }}/multi-ruby-devcontainer
+          cacheFrom: type=registry,ref=ghcr.io/${{ github.repository_owner }}/multi-ruby-devcontainer:buildcache
+          cacheTo: type=registry,ref=ghcr.io/${{ github.repository_owner }}/multi-ruby-devcontainer:buildcache,mode=max
 
+  delete_old_container_images:
+    needs: build_multi_ruby_devcontainer
+    name: Delete old container images
+    runs-on: ubuntu-latest
+    steps:
       - name: Delete old container images
         uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4 # v1.0.16
         with:
-          packages: multi-ruby-devcontainer
+          packages: ruby-base,jruby-base,multi-ruby-devcontainer
           keep-n-untagged: 1

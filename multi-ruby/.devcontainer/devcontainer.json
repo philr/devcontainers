@@ -3,7 +3,12 @@
         "dockerfile": "./Dockerfile",
         "context": ".",
         "args": {
-            "USER": "${localEnv:GITHUB_REPOSITORY_OWNER}"
+            "USER": "${localEnv:GITHUB_REPOSITORY_OWNER}",
+            "RUBY_BASE": "${localEnv:RUBY_BASE}",
+            "REPOSITORY": "${localEnv:GITHUB_REPOSITORY}",
+            "RBENV_VERSIONS": "${localEnv:RBENV_VERSIONS}",
+            "RBENV_GLOBAL_VERSION": "${localEnv:RBENV_GLOBAL_VERSION}",
+            "RUBY_PLATFORM": "${localEnv:RUBY_PLATFORM}"
         }
     },
     "features": {
