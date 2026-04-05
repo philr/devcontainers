@@ -13,7 +13,7 @@ ENV JAVA_HOME=/usr/lib/jvm/temurin-21-jre-amd64
 
 COPY --chown=devcontainer:devcontainer patches .rbenv-patches/
 
-RUN if [[ "$USE_LEGACY_RUBY_BUILD" -eq 1 ]]; then git -C $HOME/.rbenv/plugins/ruby-build switch ruby-builder-legacy-support; fi \
+RUN if [[ "$LEGACY" -eq 1 ]]; then git -C $HOME/.rbenv/plugins/ruby-build switch ruby-builder-legacy-support; fi \
     && git -C $HOME/.rbenv/plugins/ruby-build pull \
     && eval "$($HOME/.rbenv/bin/rbenv init - --no-rehash bash)" \
     && if [[ -n "$PATCH" ]]; \
