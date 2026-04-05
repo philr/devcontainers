@@ -10,7 +10,8 @@ ARG WARN_FLAGS=
 ARG PATCH=
 ARG POST_PATCH=
 ARG CPP_FLAGS=-DENABLE_PATH_CHECK=0
-ENV JAVA_HOME=/usr/lib/jvm/temurin-21-jre-amd64
+ARG JAVA_HOME
+ENV JAVA_HOME=$JAVA_HOME
 
 COPY --chown=devcontainer:devcontainer patches .rbenv-patches/
 
