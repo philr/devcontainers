@@ -122,7 +122,6 @@ jobs:
             VERSION=${{ matrix.args.version }}
             LEGACY=${{ matrix.args.legacy || '0' }}
             INSTALL_BUNDLER_VERSION=${{ matrix.args.bundler_version || '' }}
-            GEM_NO_DOCUMENT=${{ matrix.args.gem_no_document || '--no-document' }}
             CPP_FLAGS=${{ matrix.args.cpp_flags || '-DENABLE_PATH_CHECK=0' }}
             WARN_FLAGS=${{ matrix.args.warn_flags }}
             PATCH=${{ matrix.args.patch }}
