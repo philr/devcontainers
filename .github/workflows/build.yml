@@ -28,24 +28,24 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ruby-base
-          cache-from: type=registry,ref=ghcr.io/${{github.repository_owner}}/ruby-base:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{github.repository_owner}}/ruby-base:buildcache,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ruby-base:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ruby-base:buildcache,mode=max
           build-args: |
-            USER=${{github.repository_owner}}
+            USER=${{ github.repository_owner }}
             UBUNTU_VERSION=24.04
           push: true
-          tags: ghcr.io/${{github.repository_owner}}/ruby-base:latest
+          tags: ghcr.io/${{ github.repository_owner }}/ruby-base:latest
 
       - name: Build and push jruby-base
         uses: docker/build-push-action@v6
         with:
           context: jruby-base
-          cache-from: type=registry,ref=ghcr.io/${{github.repository_owner}}/jruby-base:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{github.repository_owner}}/jruby-base:buildcache,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jruby-base:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jruby-base:buildcache,mode=max
           build-args: |
-            USER=${{github.repository_owner}}
+            USER=${{ github.repository_owner }}
           push: true
-          tags: ghcr.io/${{github.repository_owner}}/jruby-base:latest
+          tags: ghcr.io/${{ github.repository_owner }}/jruby-base:latest
 
       - name: Delete old container images
         uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4 # v1.0.16
@@ -117,7 +117,7 @@ jobs:
         with:
           context: ruby
           build-args: |
-            USER=${{github.repository_owner}}
+            USER=${{ github.repository_owner }}
             RUBY_BASE=${{ matrix.args.ruby_base || 'ruby-base' }}
             VERSION=${{ matrix.args.version }}
             LEGACY=${{ matrix.args.legacy || '0' }}
