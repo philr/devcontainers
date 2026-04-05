@@ -1,0 +1,10 @@
+--- a/lib/bundler/vendor/net-http-persistent/lib/net/http/persistent/ssl_reuse.rb	2020-12-30 11:48:33.590136927 +0000
++++ b/lib/bundler/vendor/net-http-persistent/lib/net/http/persistent/ssl_reuse.rb	2020-12-30 11:50:21.548088543 +0000
+@@ -114,6 +114,7 @@
+         Net::HTTPResponse.read_new(@socket).value
+       end
+       s.session = @ssl_session if @ssl_session
++      s.hostname = @address if s.respond_to? :hostname=
+       s.connect
+       if @ssl_context.verify_mode != OpenSSL::SSL::VERIFY_NONE
+         s.post_connection_check(@address)
