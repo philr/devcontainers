@@ -84,6 +84,7 @@ jobs:
           { version: "jruby-9.0.5.0", ruby_base: "jruby-base", java_home: "/usr/lib/jvm/temurin-8-jre-amd64", legacy: 1, bundler_version: "~> 1" },
           { version: "truffleruby-33.0.1" }
         ]
+      fail-fast: false
     steps:
       - name: Initialize variables
         id: variables
