@@ -5,7 +5,7 @@ FROM ghcr.io/${USER}/${RUBY_BASE}
 
 ARG VERSION
 ARG LEGACY=0
-ARG BUNDLER_VERSION=
+ARG INSTALL_BUNDLER_VERSION=
 ARG GEM_NO_DOCUMENT=--no-document
 ARG WARN_FLAGS=
 ARG PATCH=
@@ -21,4 +21,4 @@ RUN if [[ "$LEGACY" -eq 1 ]]; then git -C $HOME/.rbenv/plugins/ruby-build switch
         else RUBY_CONFIGURE_OPTS="--disable-install-doc --disable-install-rdoc" warnflags="$WARN_FLAGS" rbenv install --verbose "$VERSION"; \
     fi \
     && rbenv global "$VERSION" \
-    && if [[ -n "$BUNDLER_VERSION" ]]; then gem install bundler -v "$BUNDLER_VERSION" "$GEM_NO_DOCUMENT"; fi
+    && if [[ -n "$INSTALL_BUNDLER_VERSION" ]]; then gem install bundler -v "$INSTALL_BUNDLER_VERSION" "$GEM_NO_DOCUMENT"; fi

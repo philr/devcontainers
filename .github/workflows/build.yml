@@ -121,7 +121,7 @@ jobs:
             RUBY_BASE=${{ matrix.args.ruby_base || 'ruby-base' }}
             VERSION=${{ matrix.args.version }}
             LEGACY=${{ matrix.args.legacy || '0' }}
-            BUNDLER_VERSION=${{ matrix.args.bundler_version || '' }}
+            INSTALL_BUNDLER_VERSION=${{ matrix.args.bundler_version || '' }}
             GEM_NO_DOCUMENT=${{ matrix.args.gem_no_document || '--no-document' }}
             WARN_FLAGS=${{ matrix.args.warn_flags }}
             PATCH=${{ matrix.args.patch }}
