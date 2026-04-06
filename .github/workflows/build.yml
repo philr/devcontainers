@@ -33,6 +33,7 @@ jobs:
           build-args: |
             USER=${{ github.repository_owner }}
             UBUNTU_VERSION=24.04
+          pull: true
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/ruby-base:latest
 
@@ -44,6 +45,7 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jruby-base:buildcache,mode=max
           build-args: |
             USER=${{ github.repository_owner }}
+          pull: true
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/jruby-base:latest
 
