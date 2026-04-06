@@ -24,4 +24,8 @@ RUN if [[ "$LEGACY" -eq 1 ]]; then git -C $HOME/.rbenv/plugins/ruby-build switch
     fi \
     && rbenv global "$VERSION" \
     && if [[ -n "$INSTALL_BUNDLER_VERSION" ]]; then if gem help install | grep -q no-document; then gem install bundler -v "$INSTALL_BUNDLER_VERSION" --no-document; else gem install bundler -v "$INSTALL_BUNDLER_VERSION" --no-rdoc --no-ri; fi; fi \
-    && if [[ -n "$POST_PATCH" ]]; then patch -p2 -d "$(dirname $(gem which bundler))" < "$HOME/.rbenv-patches/$POST_PATCH"; fi
+    && if [[ -n "$POST_PATCH" ]]; then patch -p2 -d "$(dirname $(gem which bundler))" < "$HOME/.rbenv-patches/$POST_PATCH"; fi \
+    && shopt -s nullglob \
+    && rm -rf "$HOME"/.rbenv/versions/*/lib/ruby/gems/*/cache/* \
+    && rm -rf "$HOME"/.rbenv/versions/*/lib/ruby/gems/*/doc/* \
+    && shopt -u nullglob
