@@ -10,6 +10,9 @@ jobs:
   build_ruby_base:
     name: Build ruby-base and jruby-base images
     runs-on: ubuntu-latest
+    outputs:
+      ruby_base_digest: ${{ steps.build_ruby_base.outputs.digest }}
+      jruby_base_digest: ${{ steps.build_jruby_base.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -21,32 +24,40 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get base image digest
+        id: base_image
+        run: |
+          docker pull ubuntu:24.04
+          echo "repo_digest=$(docker inspect --format='{{index .RepoDigests 0}}' ubuntu:24.04)" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
       - name: Build and push ruby-base
+        id: build_ruby_base
         uses: docker/build-push-action@v7
         with:
           context: ruby-base
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ruby-base:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ruby-base:buildcache,mode=max
           build-args: |
-            USER=${{ github.repository_owner }}
-            UBUNTU_VERSION=24.04
-          pull: true
-          push: true
+            BASE_IMAGE=${{ steps.base_image.outputs.repo_digest }}
+          push: ${{ github.event_name != 'pull_request' }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository_owner }}/devcontainers
           tags: ghcr.io/${{ github.repository_owner }}/ruby-base:latest
 
       - name: Build and push jruby-base
+        id: build_jruby_base
         uses: docker/build-push-action@v7
         with:
           context: jruby-base
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jruby-base:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jruby-base:buildcache,mode=max
           build-args: |
-            USER=${{ github.repository_owner }}
+            BASE_IMAGE=ghcr.io/${{ github.repository_owner }}/ruby-base@${{ steps.build_ruby_base.outputs.digest }}
           pull: true
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/${{ github.repository_owner }}/jruby-base:latest
 
       - name: Delete old container images
@@ -78,12 +89,12 @@ jobs:
           { version: "2.0.0-p648", legacy: 1, bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration" },
           { version: "1.9.3-p551", legacy: 1, bundler_version: "~> 1", cpp_flags: "-DENABLE_PATH_CHECK=0 -D_FORTIFY_SOURCE=2", warn_flags: "-Wno-error=implicit-function-declaration" },
           { version: "1.8.7-p375", legacy: 1, bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration", patch: "ruby/1.8.7-enable-ssl-sni.patch", post_patch: "bundler/1.17.3-on-1.8.7-enable-ssl-sni.patch" },
-          { version: "jruby-10.0.4.0", ruby_base: "jruby-base" },
-          { version: "jruby-9.4.14.0", ruby_base: "jruby-base", java_version: "8" },
-          { version: "jruby-9.3.15.0", ruby_base: "jruby-base", java_version: "8" },
-          { version: "jruby-9.2.21.0", ruby_base: "jruby-base", java_version: "8" },
-          { version: "jruby-9.1.17.0", ruby_base: "jruby-base", java_version: "8", legacy: 1, bundler_version: "~> 1" },
-          { version: "jruby-9.0.5.0", ruby_base: "jruby-base", java_version: "8", legacy: 1, bundler_version: "~> 1" },
+          { version: "jruby-10.0.4.0" },
+          { version: "jruby-9.4.14.0", java_version: "8" },
+          { version: "jruby-9.3.15.0", java_version: "8" },
+          { version: "jruby-9.2.21.0", java_version: "8" },
+          { version: "jruby-9.1.17.0", java_version: "8", legacy: 1, bundler_version: "~> 1" },
+          { version: "jruby-9.0.5.0", java_version: "8", legacy: 1, bundler_version: "~> 1" },
           { version: "truffleruby-33.0.1" }
         ]
       fail-fast: false
@@ -119,8 +130,7 @@ jobs:
         with:
           context: ruby
           build-args: |
-            USER=${{ github.repository_owner }}
-            RUBY_BASE=${{ matrix.args.ruby_base || 'ruby-base' }}
+            BASE_IMAGE=ghcr.io/${{ github.repository_owner }}/${{ startsWith(matrix.args.version, 'jruby-') && 'j' || '' }}ruby-base@${{ startsWith(matrix.args.version, 'jruby-') && needs.build_ruby_base.outputs.jruby_base_digest || needs.build_ruby_base.outputs.ruby_base_digest }}
             VERSION=${{ matrix.args.version }}
             LEGACY=${{ matrix.args.legacy || '0' }}
             INSTALL_BUNDLER_VERSION=${{ matrix.args.bundler_version || '' }}
@@ -150,7 +160,7 @@ jobs:
         run: gh release upload ruby-builds "$RUNNER_TEMP/${{ steps.variables.outputs.package_file }}"
 
   build_multi_ruby_devcontainer:
-    needs: build_ruby_versions
+    needs: [ build_ruby_base, build_ruby_versions ]
     name: Build multi-ruby-devcontainer image
     runs-on: ubuntu-latest
     steps:
@@ -170,7 +180,7 @@ jobs:
       - name: Build and push multi-ruby-devcontainer
         uses: devcontainers/ci@v0.3
         env:
-          RUBY_BASE: jruby-base
+          BASE_IMAGE: ghcr.io/${{ github.repository_owner }}/jruby-base@${{ needs.build_ruby_base.outputs.jruby_base_digest }}
           RBENV_VERSIONS: "4.0.2 3.4.9 3.3.11 3.2.11 3.1.7 3.0.7 2.7.8 2.6.10 2.5.9 2.4.10 2.3.8 2.2.10 2.1.10 2.0.0-p648 1.9.3-p551 1.8.7-p375 jruby-10.0.4.0 jruby-9.4.14.0 jruby-9.3.15.0 jruby-9.2.21.0 jruby-9.1.17.0 jruby-9.0.5.0 truffleruby-33.0.1"
           RBENV_GLOBAL_VERSION: "4.0.2"
           RUBY_PLATFORM: "ubuntu-24.04"

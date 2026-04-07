@@ -1,6 +1,6 @@
-ARG USER=philr
+ARG BASE_IMAGE=ubuntu:24.04
 
-FROM ghcr.io/${USER}/ruby-base
+FROM ${BASE_IMAGE}
 
 USER root
 

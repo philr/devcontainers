@@ -1,11 +1,6 @@
-ARG USER=philr
-ARG UBUNTU_VERSION=24.04
+ARG BASE_IMAGE=ubuntu:24.04
 
-FROM ubuntu:${UBUNTU_VERSION}
-
-ARG USER
-
-LABEL org.opencontainers.image.source=https://github.com/${USER}/devcontainers
+FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-c"]
 

@@ -1,7 +1,6 @@
-ARG USER=philr
-ARG RUBY_BASE=ruby-base
+ARG BASE_IMAGE=ghcr.io/philr/ruby-base:latest
 
-FROM ghcr.io/${USER}/${RUBY_BASE}
+FROM ${BASE_IMAGE}
 
 ARG VERSION
 ARG LEGACY=0
