@@ -9,7 +9,7 @@ on:
 jobs:
   build_ruby_base:
     name: Build ruby-base and jruby-base images
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       ruby_base_digest: ${{ steps.build_ruby_base.outputs.digest }}
       jruby_base_digest: ${{ steps.build_jruby_base.outputs.digest }}
@@ -30,6 +30,9 @@ jobs:
           docker pull ubuntu:24.04
           echo "repo_digest=$(docker inspect --format='{{index .RepoDigests 0}}' ubuntu:24.04)" >> $GITHUB_OUTPUT
 
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v4
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -38,6 +41,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ruby-base
+          platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ruby-base:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ruby-base:buildcache,mode=max
           build-args: |
@@ -52,6 +56,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: jruby-base
+          platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jruby-base:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jruby-base:buildcache,mode=max
           build-args: |
@@ -68,10 +73,9 @@ jobs:
 
   build_ruby_versions:
     needs: build_ruby_base
-    name: Build Ruby ${{ matrix.args.version }}
-    runs-on: ubuntu-latest
     strategy:
       matrix:
+        architecture: [amd64, arm64]
         args: [
           { version: "4.0.3" },
           { version: "3.4.9" },
@@ -86,26 +90,30 @@ jobs:
           { version: "2.3.8", bundler_version: "~> 1" },
           { version: "2.2.10", bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration" },
           { version: "2.1.10", bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration" },
-          { version: "2.0.0-p648", legacy: 1, bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration" },
-          { version: "1.9.3-p551", legacy: 1, bundler_version: "~> 1", cpp_flags: "-DENABLE_PATH_CHECK=0 -D_FORTIFY_SOURCE=2", warn_flags: "-Wno-error=implicit-function-declaration" },
-          { version: "1.8.7-p375", legacy: 1, bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration", patch: "ruby/1.8.7-enable-ssl-sni.patch", post_patch: "bundler/1.17.3-on-1.8.7-enable-ssl-sni.patch" },
+          { version: "2.0.0-p648", legacy: 1, bundler_version: "~> 1", requires_explicit_arm64_architecture: true, warn_flags: "-Wno-error=implicit-function-declaration" },
+          { version: "1.9.3-p551", legacy: 1, bundler_version: "~> 1", requires_explicit_arm64_architecture: true, cpp_flags: "-DENABLE_PATH_CHECK=0 -D_FORTIFY_SOURCE=2", warn_flags: "-Wno-error=implicit-function-declaration" },
+          { version: "1.8.7-p375", legacy: 1, bundler_version: "~> 1", requires_explicit_arm64_architecture: true, warn_flags: "-Wno-error=implicit-function-declaration", patch: "ruby/1.8.7-enable-ssl-sni.patch", post_patch: "bundler/1.17.3-on-1.8.7-enable-ssl-sni.patch" },
           { version: "jruby-10.1.0.0" },
           { version: "jruby-10.0.5.0" },
           { version: "jruby-9.4.14.0", java_version: "8" },
           { version: "jruby-9.3.15.0", java_version: "8" },
           { version: "jruby-9.2.21.0", java_version: "8" },
           { version: "jruby-9.1.17.0", java_version: "8", legacy: 1, bundler_version: "~> 1" },
-          { version: "jruby-9.0.5.0", java_version: "8", legacy: 1, bundler_version: "~> 1" },
+          { version: "jruby-9.0.5.0", java_version: "8", legacy: 1, bundler_version: "~> 1", disable_native_on_arm64: true },
           { version: "truffleruby-34.0.0" }
         ]
+        exclude:
+          # Fails to run RubyGems: NotImplementedError: flock unsupported or native support failed to load: flock at org/jruby/RubyFile.java:310
+          - architecture: arm64
+            args: { version: "jruby-9.0.5.0", java_version: "8", legacy: 1, bundler_version: "~> 1" }
       fail-fast: false
+    name: Build Ruby ${{ matrix.args.version }} for ${{ matrix.architecture }}
+    runs-on: ubuntu-24.04${{ matrix.architecture == 'arm64' && '-arm' || '' }}
     steps:
       - name: Initialize variables
         id: variables
         run: |
-          platform=ubuntu-24.04
-          echo platform="$platform" >> $GITHUB_OUTPUT
-          echo package_file="${{ matrix.args.version }}-$platform-amd64.tar.xz" >> $GITHUB_OUTPUT
+          echo package_file="${{ matrix.args.version }}-ubuntu-24.04-${{ matrix.architecture }}.tar.xz" >> $GITHUB_OUTPUT
 
       - name: Check if already built
         id: check_exists
@@ -135,17 +143,19 @@ jobs:
             VERSION=${{ matrix.args.version }}
             LEGACY=${{ matrix.args.legacy || '0' }}
             INSTALL_BUNDLER_VERSION=${{ matrix.args.bundler_version || '' }}
+            EXTRA_CONFIGURE_OPTS=${{ matrix.args.requires_explicit_arm64_architecture && matrix.architecture == 'arm64' && '--build=aarch64-unknown-linux-gnu' || '' }}
             CPP_FLAGS=${{ matrix.args.cpp_flags || '-DENABLE_PATH_CHECK=0' }}
-            WARN_FLAGS=${{ matrix.args.warn_flags }}
+            WARN_FLAGS=${{ matrix.args.warn_flags }}            
             PATCH=${{ matrix.args.patch }}
             POST_PATCH=${{ matrix.args.post_patch }}
-            JAVA_HOME=/usr/lib/jvm/temurin-${{ matrix.args.java_version || '21' }}-jre-amd64
+            JAVA_HOME=/usr/lib/jvm/temurin-${{ matrix.args.java_version || '21' }}-jre-${{ matrix.architecture }}
+            JRUBY_OPTS=${{ matrix.args.disable_native_on_arm64 && matrix.architecture == 'arm64' && '--dev -Xnative.enabled=false' || '' }}
           load: true
-          tags: ruby-build-${{ matrix.args.version }}:latest
+          tags: ruby-build-${{ matrix.args.version }}:${{ matrix.architecture }}
 
       - name: Copy ruby build files
         if: steps.check_exists.outputs.exists == 0
-        run: docker cp "$(docker create "ruby-build-${{ matrix.args.version }}:latest"):/home/devcontainer/.rbenv/versions/${{ matrix.args.version }}" "$RUNNER_TEMP"
+        run: docker cp "$(docker create "ruby-build-${{ matrix.args.version }}:${{ matrix.architecture }}"):/home/devcontainer/.rbenv/versions/${{ matrix.args.version }}" "$RUNNER_TEMP"
 
       - name: Package ruby build files
         if: steps.check_exists.outputs.exists == 0
@@ -163,7 +173,7 @@ jobs:
   build_multi_ruby_devcontainer:
     needs: [ build_ruby_base, build_ruby_versions ]
     name: Build multi-ruby-devcontainer image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -175,6 +185,9 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v4
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -182,10 +195,12 @@ jobs:
         uses: devcontainers/ci@v0.3
         env:
           BASE_IMAGE: ghcr.io/${{ github.repository_owner }}/jruby-base@${{ needs.build_ruby_base.outputs.jruby_base_digest }}
-          RBENV_VERSIONS: "4.0.3 3.4.9 3.3.11 3.2.11 3.1.7 3.0.7 2.7.8 2.6.10 2.5.9 2.4.10 2.3.8 2.2.10 2.1.10 2.0.0-p648 1.9.3-p551 1.8.7-p375 jruby-10.1.0.0 jruby-10.0.5.0 jruby-9.4.14.0 jruby-9.3.15.0 jruby-9.2.21.0 jruby-9.1.17.0 jruby-9.0.5.0 truffleruby-33.0.1"
+          RBENV_VERSIONS: "4.0.3 3.4.9 3.3.11 3.2.11 3.1.7 3.0.7 2.7.8 2.6.10 2.5.9 2.4.10 2.3.8 2.2.10 2.1.10 2.0.0-p648 1.9.3-p551 1.8.7-p375 jruby-10.1.0.0 jruby-10.0.5.0 jruby-9.4.14.0 jruby-9.3.15.0 jruby-9.2.21.0 jruby-9.1.17.0 truffleruby-34.0.0"
+          AMD64_ONLY_RBENV_VERSIONS: "jruby-9.0.5.0"
           RBENV_GLOBAL_VERSION: "4.0.3"
-          RUBY_PLATFORM: "ubuntu-24.04"
+          RUBY_OS: ubuntu-24.04
         with:
+          platform: linux/amd64,linux/arm64
           subFolder: multi-ruby
           imageName: ghcr.io/${{ github.repository_owner }}/multi-ruby-devcontainer
           cacheFrom: type=registry,ref=ghcr.io/${{ github.repository_owner }}/multi-ruby-devcontainer:buildcache
@@ -194,7 +209,7 @@ jobs:
   delete_old_container_images:
     needs: build_multi_ruby_devcontainer
     name: Delete old container images
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Delete old container images
         uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4 # v1.0.16
