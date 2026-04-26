@@ -200,5 +200,3 @@ jobs:
         with:
           packages: ruby-base,jruby-base,multi-ruby-devcontainer
           keep-n-untagged: 1
-
-# todo: node version upgrades - upgrade all dependencies
