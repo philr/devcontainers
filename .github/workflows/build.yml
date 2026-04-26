@@ -73,7 +73,7 @@ jobs:
     strategy:
       matrix:
         args: [
-          { version: "4.0.2" },
+          { version: "4.0.3" },
           { version: "3.4.9" },
           { version: "3.3.11" },
           { version: "3.2.11" },
@@ -89,13 +89,14 @@ jobs:
           { version: "2.0.0-p648", legacy: 1, bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration" },
           { version: "1.9.3-p551", legacy: 1, bundler_version: "~> 1", cpp_flags: "-DENABLE_PATH_CHECK=0 -D_FORTIFY_SOURCE=2", warn_flags: "-Wno-error=implicit-function-declaration" },
           { version: "1.8.7-p375", legacy: 1, bundler_version: "~> 1", warn_flags: "-Wno-error=implicit-function-declaration", patch: "ruby/1.8.7-enable-ssl-sni.patch", post_patch: "bundler/1.17.3-on-1.8.7-enable-ssl-sni.patch" },
-          { version: "jruby-10.0.4.0" },
+          { version: "jruby-10.1.0.0" },
+          { version: "jruby-10.0.5.0" },
           { version: "jruby-9.4.14.0", java_version: "8" },
           { version: "jruby-9.3.15.0", java_version: "8" },
           { version: "jruby-9.2.21.0", java_version: "8" },
           { version: "jruby-9.1.17.0", java_version: "8", legacy: 1, bundler_version: "~> 1" },
           { version: "jruby-9.0.5.0", java_version: "8", legacy: 1, bundler_version: "~> 1" },
-          { version: "truffleruby-33.0.1" }
+          { version: "truffleruby-34.0.0" }
         ]
       fail-fast: false
     steps:
@@ -181,8 +182,8 @@ jobs:
         uses: devcontainers/ci@v0.3
         env:
           BASE_IMAGE: ghcr.io/${{ github.repository_owner }}/jruby-base@${{ needs.build_ruby_base.outputs.jruby_base_digest }}
-          RBENV_VERSIONS: "4.0.2 3.4.9 3.3.11 3.2.11 3.1.7 3.0.7 2.7.8 2.6.10 2.5.9 2.4.10 2.3.8 2.2.10 2.1.10 2.0.0-p648 1.9.3-p551 1.8.7-p375 jruby-10.0.4.0 jruby-9.4.14.0 jruby-9.3.15.0 jruby-9.2.21.0 jruby-9.1.17.0 jruby-9.0.5.0 truffleruby-33.0.1"
-          RBENV_GLOBAL_VERSION: "4.0.2"
+          RBENV_VERSIONS: "4.0.3 3.4.9 3.3.11 3.2.11 3.1.7 3.0.7 2.7.8 2.6.10 2.5.9 2.4.10 2.3.8 2.2.10 2.1.10 2.0.0-p648 1.9.3-p551 1.8.7-p375 jruby-10.1.0.0 jruby-10.0.5.0 jruby-9.4.14.0 jruby-9.3.15.0 jruby-9.2.21.0 jruby-9.1.17.0 jruby-9.0.5.0 truffleruby-33.0.1"
+          RBENV_GLOBAL_VERSION: "4.0.3"
           RUBY_PLATFORM: "ubuntu-24.04"
         with:
           subFolder: multi-ruby
