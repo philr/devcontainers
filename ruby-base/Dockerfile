@@ -28,7 +28,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         lsb-release \
         make \
         patch \
-        rdfind \
         xz-utils \
         zlib1g-dev \
     && apt-get autoremove --yes \

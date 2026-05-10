@@ -5,9 +5,6 @@
         "args": {
             "BASE_IMAGE": "${localEnv:BASE_IMAGE}",
             "REPOSITORY": "${localEnv:GITHUB_REPOSITORY}",
-            "RBENV_VERSIONS": "${localEnv:RBENV_VERSIONS}",
-            "AMD64_ONLY_RBENV_VERSIONS": "${localEnv:AMD64_ONLY_RBENV_VERSIONS}",
-            "RBENV_GLOBAL_VERSION": "${localEnv:RBENV_GLOBAL_VERSION}",
             "RUBY_OS": "${localEnv:RUBY_OS}"
         }
     },
