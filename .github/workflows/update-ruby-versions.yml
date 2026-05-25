@@ -33,4 +33,5 @@ jobs:
           commit-message: "Update Ruby Versions: ${{ steps.update_files.outputs.versions }}"
           branch: "update-ruby-versions"
           delete-branch: true
+          title: "Update Ruby Versions: ${{ steps.update_files.outputs.versions }}"
           body: New Ruby versions were detected in ruby-build.
