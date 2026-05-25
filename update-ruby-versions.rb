@@ -1,6 +1,3 @@
-BUILD_YML_PATH = '.github/workflows/build.yml'
-DOCKERFILE_PATH = 'multi-ruby/.devcontainer/Dockerfile'
-
 LATEST=0
 MAJOR=1
 MINOR=2
@@ -154,6 +151,6 @@ class Updater
 end
 
 updater = Updater.new
-updated = updater.update_versions(BUILD_YML_PATH, /\A(\s+\{\s*version:\s*")(.+?)(".+)\z/m)
-updated |= updater.update_versions(DOCKERFILE_PATH, /\A(RUN\s+curl\s.+\/ruby-builds\/)(.+?)(-\$RUBY_OS-\$TARGETARCH\.tar\.xz".+)\z/m, /\A(.+\s+rbenv\s+global\s+")(.+?)(".+)\z/m)
+updated = updater.update_versions('ruby-matrix.yml', /\A(\s+\{\s*version:\s*")(.+?)(".+)\z/m)
+updated |= updater.update_versions('multi-ruby/.devcontainer/Dockerfile', /\A(RUN\s+curl\s.+\/ruby-builds\/)(.+?)(-\$RUBY_OS-\$TARGETARCH\.tar\.xz".+)\z/m, /\A(.+\s+rbenv\s+global\s+")(.+?)(".+)\z/m)
 puts updated.sort.join(', ') if updated.any?

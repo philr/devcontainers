@@ -71,41 +71,31 @@ jobs:
           packages: ruby-base,jruby-base
           keep-n-untagged: 1
 
+  load_ruby_matrix:
+    name: Loads Ruby versions to build
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.load_matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Load matrix
+        id: load_matrix
+        run: |
+          set -euo pipefail
+          matrix=$(yq --output-format=json ruby-matrix.yml | jq --compact-output .)
+          status=$?
+          if [ $status -ne 0 ]; then
+            exit $status
+          fi
+          echo "$matrix"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   build_ruby_versions:
-    needs: build_ruby_base
+    needs: [build_ruby_base, load_ruby_matrix]
     strategy:
-      matrix:
-        architecture: [amd64, arm64]
-        args: [
-          { version: "4.0.3" },
-          { version: "3.4.9" },
-          { version: "3.3.11" },
-          { version: "3.2.11" },
-          { version: "3.1.7" },
-          { version: "3.0.7" },
-          { version: "2.7.8" },
-          { version: "2.6.10", bundler_version: "~> 1" },
-          { version: "2.5.9", bundler_version: "~> 1" },
-          { version: "2.4.10", bundler_version: "~> 1" },
-          { version: "2.3.8", bundler_version: "~> 1", extra_configure_opts: "--enable-shared" },
-          { version: "2.2.10", bundler_version: "~> 1", extra_configure_opts: "--enable-shared", warn_flags: "-Wno-error=implicit-function-declaration" },
-          { version: "2.1.10", bundler_version: "~> 1", extra_configure_opts: "--enable-shared", warn_flags: "-Wno-error=implicit-function-declaration" },
-          { version: "2.0.0-p648", legacy: 1, bundler_version: "~> 1", extra_configure_opts: "--enable-shared", requires_explicit_arm64_architecture: true, warn_flags: "-Wno-error=implicit-function-declaration" },
-          { version: "1.9.3-p551", legacy: 1, bundler_version: "~> 1", extra_configure_opts: "--enable-shared", requires_explicit_arm64_architecture: true, cpp_flags: "-DENABLE_PATH_CHECK=0 -D_FORTIFY_SOURCE=2", warn_flags: "-Wno-error=implicit-function-declaration" },
-          { version: "1.8.7-p375", legacy: 1, bundler_version: "~> 1", extra_configure_opts: "--enable-shared", requires_explicit_arm64_architecture: true, warn_flags: "-Wno-error=implicit-function-declaration", patch: "ruby/1.8.7-enable-ssl-sni.patch", post_patch: "bundler/1.17.3-on-1.8.7-enable-ssl-sni.patch" },
-          { version: "jruby-10.1.0.0" },
-          { version: "jruby-10.0.5.0" },
-          { version: "jruby-9.4.14.0", java_version: "8" },
-          { version: "jruby-9.3.15.0", java_version: "8" },
-          { version: "jruby-9.2.21.0", java_version: "8" },
-          { version: "jruby-9.1.17.0", java_version: "8", legacy: 1, bundler_version: "~> 1" },
-          { version: "jruby-9.0.5.0", java_version: "8", legacy: 1, bundler_version: "~> 1", disable_native_on_arm64: true },
-          { version: "truffleruby-34.0.0" }
-        ]
-        exclude:
-          # Fails to run RubyGems: NotImplementedError: flock unsupported or native support failed to load: flock at org/jruby/RubyFile.java:310
-          - architecture: arm64
-            args: { version: "jruby-9.0.5.0", java_version: "8", legacy: 1, bundler_version: "~> 1" }
+      matrix: ${{ fromJson(needs.load_ruby_matrix.outputs.matrix) }}
       fail-fast: false
     name: Build Ruby ${{ matrix.args.version }} for ${{ matrix.architecture }}
     runs-on: ubuntu-24.04${{ matrix.architecture == 'arm64' && '-arm' || '' }}
