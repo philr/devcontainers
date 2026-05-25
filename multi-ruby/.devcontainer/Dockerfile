@@ -6,7 +6,7 @@ ARG TARGETARCH
 ARG REPOSITORY=philr/devcontainers
 ARG RUBY_OS=ubuntu-24.04
 
-RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/4.0.3-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
+RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/4.0.5-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/3.4.9-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/3.3.11-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/3.2.11-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
@@ -29,8 +29,8 @@ RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/jruby-9.2.21.0-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/jruby-9.1.17.0-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN if [[ $TARGETARCH = amd64 ]]; then curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/jruby-9.0.5.0-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"; fi
-RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/truffleruby-34.0.0-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
+RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/truffleruby-34.0.1-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 
 RUN eval "$($HOME/.rbenv/bin/rbenv init - --no-rehash bash)" \
-    && rbenv global "4.0.3" \
+    && rbenv global "4.0.5" \
     && rbenv rehash
