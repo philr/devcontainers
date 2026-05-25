@@ -1,0 +1,36 @@
+name: Update Ruby Versions
+
+on:
+  schedule:
+    - cron: 29 6 * * 0
+      timezone: Europe/London
+  workflow_dispatch:
+
+jobs:
+  check_and_create_pr:
+    name: Check for updates and create pull request
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Clone ruby-build
+        run: git clone --depth=1 https://github.com/rbenv/ruby-build.git "$RUNNER_TEMP/ruby-build"
+
+      - name: Add ruby-build to path
+        run: echo "$RUNNER_TEMP/ruby-build/bin" >> "$GITHUB_PATH"
+
+      - name: Update files
+        id: update_files
+        run: |
+          versions="$(ruby update-ruby-versions.rb)"
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        if: steps.update_files.outputs.versions != ''
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # 8.1.1
+        with:
+          commit-message: "Update Ruby Versions: ${{ steps.update_files.outputs.versions }}"
+          branch: "update-ruby-versions"
+          delete-branch: true
+          body: New Ruby versions were detected in ruby-build.
