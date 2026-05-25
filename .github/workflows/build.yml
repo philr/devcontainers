@@ -28,7 +28,7 @@ jobs:
         id: base_image
         run: |
           docker pull ubuntu:24.04
-          echo "repo_digest=$(docker inspect --format='{{index .RepoDigests 0}}' ubuntu:24.04)" >> $GITHUB_OUTPUT
+          echo "repo_digest=$(docker inspect --format='{{index .RepoDigests 0}}' ubuntu:24.04)" >> "$GITHUB_OUTPUT"
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v4
@@ -113,16 +113,16 @@ jobs:
       - name: Initialize variables
         id: variables
         run: |
-          echo package_file="${{ matrix.args.version }}-ubuntu-24.04-${{ matrix.architecture }}.tar.xz" >> $GITHUB_OUTPUT
+          echo package_file="${{ matrix.args.version }}-ubuntu-24.04-${{ matrix.architecture }}.tar.xz" >> "$GITHUB_OUTPUT"
 
       - name: Check if already built
         id: check_exists
         run: |
           if curl --fail --head --retry 5 --silent "https://github.com/$GITHUB_REPOSITORY/releases/download/ruby-builds/${{ steps.variables.outputs.package_file }}"
           then
-            echo exists=1 >> $GITHUB_OUTPUT
+            echo exists=1 >> "$GITHUB_OUTPUT"
           else
-            echo exists=0 >> $GITHUB_OUTPUT
+            echo exists=0 >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout
