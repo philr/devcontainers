@@ -72,7 +72,7 @@ jobs:
           keep-n-untagged: 1
 
   load_ruby_matrix:
-    name: Loads Ruby versions to build
+    name: Load Ruby versions to build
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.load_matrix.outputs.matrix }}
