@@ -2,7 +2,7 @@ name: Update Ruby Versions
 
 on:
   schedule:
-    - cron: 29 6 * * 0
+    - cron: "29 6 * * 0"
       timezone: Europe/London
   workflow_dispatch:
 
