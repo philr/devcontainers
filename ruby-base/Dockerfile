@@ -28,6 +28,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         lsb-release \
         make \
         patch \
+        tzdata \
         xz-utils \
         zlib1g-dev \
     && apt-get autoremove --yes \
