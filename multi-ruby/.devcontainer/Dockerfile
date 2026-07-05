@@ -7,7 +7,7 @@ ARG REPOSITORY=philr/devcontainers
 ARG RUBY_OS=ubuntu-24.04
 
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/4.0.5-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
-RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/3.4.9-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
+RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/3.4.10-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/3.3.11-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/3.2.11-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/3.1.7-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
