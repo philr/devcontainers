@@ -22,7 +22,7 @@ RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/2.0.0-p648-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/1.9.3-p551-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/1.8.7-p375-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
-RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/jruby-10.1.0.0-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
+RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/jruby-10.1.1.0-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/jruby-10.0.6.0-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/jruby-9.4.15.0-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
 RUN curl --location --retry 5 "https://github.com/$REPOSITORY/releases/download/ruby-builds/jruby-9.3.15.0-$RUBY_OS-$TARGETARCH.tar.xz" | tar xJ -C "$HOME/.rbenv/versions"
