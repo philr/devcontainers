@@ -15,7 +15,7 @@ jobs:
       jruby_base_digest: ${{ steps.build_jruby_base.outputs.digest }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
@@ -66,7 +66,7 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/jruby-base:latest
 
       - name: Delete old container images
-        uses: dataaxiom/ghcr-cleanup-action@374e2028c8fb93b7219f3771cd405fab95d3dec4 # v1.2.0
+        uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
         with:
           packages: ruby-base,jruby-base
           keep-n-untagged: 1
@@ -78,7 +78,7 @@ jobs:
       matrix: ${{ steps.load_matrix.outputs.matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Load matrix
         id: load_matrix
@@ -117,7 +117,7 @@ jobs:
 
       - name: Checkout
         if: steps.check_exists.outputs.exists == 0
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
         if: steps.check_exists.outputs.exists == 0
@@ -166,7 +166,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
@@ -199,7 +199,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Delete old container images
-        uses: dataaxiom/ghcr-cleanup-action@374e2028c8fb93b7219f3771cd405fab95d3dec4 # v1.2.0
+        uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
         with:
           packages: ruby-base,jruby-base,multi-ruby-devcontainer
           keep-n-untagged: 1

@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Clone ruby-build
         run: git clone --depth=1 https://github.com/rbenv/ruby-build.git "$RUNNER_TEMP/ruby-build"
