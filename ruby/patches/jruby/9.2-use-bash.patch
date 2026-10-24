@@ -1,0 +1,8 @@
+--- a/bin/jruby.sh
++++ b/bin/jruby.sh
+@@ -1,4 +1,4 @@
+-#! /bin/sh
++#! /bin/bash
+ # -----------------------------------------------------------------------------
+ # jruby.sh - Start Script for the JRuby interpreter
+ #

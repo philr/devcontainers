@@ -21,7 +21,7 @@ args: [
   { version: "jruby-10.0.7.0" },
   { version: "jruby-9.4.15.0", java_version: "8" },
   { version: "jruby-9.3.15.0", java_version: "8" },
-  { version: "jruby-9.2.21.0", java_version: "8" },
+  { version: "jruby-9.2.21.0", java_version: "8", post_patch: "jruby/9.2-use-bash.patch" },
   { version: "jruby-9.1.17.0", java_version: "8", legacy: 1, bundler_version: "~> 1" },
   { version: "jruby-9.0.5.0", java_version: "8", legacy: 1, bundler_version: "~> 1", disable_native_on_arm64: true },
   { version: "truffleruby-40.0.0" }
