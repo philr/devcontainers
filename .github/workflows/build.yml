@@ -61,7 +61,6 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/jruby-base:buildcache,mode=max
           build-args: |
             BASE_IMAGE=ghcr.io/${{ github.repository_owner }}/ruby-base@${{ steps.build_ruby_base.outputs.digest }}
-          pull: true
           push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/${{ github.repository_owner }}/jruby-base:latest
 
