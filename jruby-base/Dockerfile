@@ -2,8 +2,6 @@ ARG BASE_IMAGE=ubuntu:24.04
 
 FROM ${BASE_IMAGE}
 
-ARG TARGETARCH
-
 USER root
 
 RUN curl --retry 5 https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor > /usr/share/keyrings/adoptium.gpg \
@@ -14,6 +12,8 @@ RUN curl --retry 5 https://packages.adoptium.net/artifactory/api/gpg/key/public 
         temurin-8-jre \
         temurin-21-jre \
     && apt-get dist-clean
+
+ARG TARGETARCH
 
 ENV JAVA_HOME_8=/usr/lib/jvm/temurin-8-jre-$TARGETARCH
 ENV JAVA_HOME_21=/usr/lib/jvm/temurin-21-jre-$TARGETARCH
